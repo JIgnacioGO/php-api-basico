@@ -1,0 +1,64 @@
+name: Deploy to VPS
+
+# Trigger automático cuando haces push a main
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:  # Permite ejecutar manualmente desde GitHub UI
+
+jobs:
+  deploy:
+    name: Deploy to Production VPS
+    runs-on: ubuntu-latest
+    
+    steps:
+      # 1. Checkout del código del repo
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      # 2. Setup PHP para validación de sintaxis
+      - name: Setup PHP 8.1
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.1'
+          extensions: mbstring, xml, ctype, json
+      
+      # 3. Validar sintaxis de todos los archivos PHP
+      - name: Validate PHP syntax
+        run: |
+          echo "🔍 Validando sintaxis PHP..."
+          find . -type f -name "*.php" -exec php -l {} \; || exit 1
+          echo "✅ Sintaxis PHP válida"
+      
+      # 4. Deploy via SSH + rsync (más eficiente que git pull)
+      - name: Deploy to VPS via rsync
+        uses: burnett01/rsync-deployments@7.0.1
+        with:
+          switches: -avzr --delete --exclude='.git' --exclude='.github' --exclude='.idea' --exclude='mise.local.toml'
+          path: .
+          remote_path: /var/www/dev.jgutierrez.site/learning/php-api-basico
+          remote_host: ${{ secrets.VPS_HOST }}
+          remote_user: ${{ secrets.VPS_USER }}
+          remote_key: ${{ secrets.VPS_SSH_KEY }}
+      
+      # 5. Post-deployment: log y verificación
+      - name: Post-deployment tasks
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          script: |
+            echo "========================================" >> /var/www/dev.jgutierrez.site/deploy/deploy.log
+            echo "✅ Deploy exitoso: $(date '+%Y-%m-%d %H:%M:%S')" >> /var/www/dev.jgutierrez.site/deploy/deploy.log
+            echo "📦 Proyecto: php-api-basico" >> /var/www/dev.jgutierrez.site/deploy/deploy.log
+            echo "👤 Usuario: webdev" >> /var/www/dev.jgutierrez.site/deploy/deploy.log
+            echo "📁 Path: /var/www/dev.jgutierrez.site/learning/php-api-basico" >> /var/www/dev.jgutierrez.site/deploy/deploy.log
+            echo "========================================" >> /var/www/dev.jgutierrez.site/deploy/deploy.log
+            
+            # Verificar que el archivo existe
+            if [ -f /var/www/dev.jgutierrez.site/learning/php-api-basico/index.php ]; then
+              echo "✅ index.php verificado en servidor"
+            else
+              echo "❌ ERROR: index.php no encontrado" && exit 1
+            fi

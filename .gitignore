@@ -1,0 +1,130 @@
+# ================================
+# PHP PROJECT - GITIGNORE
+# Auto-deploy to dev.jgutierrez.site
+# ================================
+
+# ====================
+# SECURITY (CRÍTICO)
+# ====================
+# Environment variables
+.env
+.env.*
+!.env.example
+
+# Secrets y credenciales
+*.key
+*.pem
+secrets.yml
+api-keys.json
+
+# ====================
+# PHPSTORM / JETBRAINS
+# ====================
+# Personal IDE settings
+# PhpStorm / JetBrains
+.idea/
+.idea/workspace.xml
+.idea/tasks.xml
+.idea/usage.statistics.xml
+.idea/shelf/
+.idea/dictionaries/
+.idea/**/workspace.xml
+.idea/**/tasks.xml
+.idea/**/dataSources/
+.idea/**/dataSources.ids
+.idea/**/dataSources.local.xml
+.idea/**/sqlDataSources.xml
+.idea/**/dynamic.xml
+
+
+# Archivos sensibles de IDE
+.idea/**/uiDesigner.xml
+.idea/**/dbnavigator.xml
+
+# ====================
+# MISE (Version Manager)
+# ====================
+# Configuración personal
+mise.local.toml
+
+# ====================
+# PHP DEPENDENCIES
+# ====================
+# Composer
+/vendor/
+composer.phar
+composer.lock
+
+# ====================
+# LOGS Y TEMPORALES
+# ====================
+*.log
+*.tmp
+*.cache
+*.bak
+*.swp
+*~
+
+# PHP error logs
+error_log
+php_errors.log
+
+# ====================
+# OS FILES
+# ====================
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# Linux
+*~
+.directory
+.Trash-*
+
+# ====================
+# BUILD & DIST
+# ====================
+/dist/
+/build/
+/public/build/
+
+# ====================
+# TESTING (futuro)
+# ====================
+/coverage/
+.phpunit.result.cache
+.phpunit.cache
+
+# ====================
+# NODE
+# ====================
+node_modules/
+npm-debug.log
+yarn-error.log
+package-lock.json
+
+# ====================
+# OTROS
+# ====================
+# Backups
+*.sql
+*.sql.gz
+*.sqlite
+
+# Uploads
+/uploads/
+/storage/
+
+# Cache de framework
+/bootstrap/cache/
+/storage/framework/cache/
+/storage/framework/sessions/
+/storage/framework/views/
