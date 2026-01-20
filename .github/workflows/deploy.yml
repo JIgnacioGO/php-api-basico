@@ -1,71 +1,33 @@
 name: Deploy to VPS
 
-# Trigger automático cuando haces push a main
 on:
   push:
-    branches: [ main ]
-  workflow_dispatch:  # Permite ejecutar manualmente desde GitHub UI
+    branches: [main]
+  workflow_dispatch:
 
 jobs:
   deploy:
-    name: Deploy to Production VPS
     runs-on: ubuntu-latest
-    
     steps:
-      # 1. Checkout del código del repo
       - name: Checkout code
         uses: actions/checkout@v4
-      
-      # 2. Setup PHP para validación de sintaxis
-      - name: Setup PHP 8.1
-        uses: shivammathur/setup-php@v2
-        with:
-          php-version: '8.1'
-          extensions: mbstring, xml, ctype, json
-      
-      # 3. Validar sintaxis de todos los archivos PHP
-      - name: Validate PHP syntax
-        run: |
-          echo "🔍 Validando sintaxis PHP..."
-          find . -type f -name "*.php" -exec php -l {} \; || exit 1
-          echo "✅ Sintaxis PHP válida"
-      
-      # 4. Deploy via SSH + rsync
-      - name: Create SSH key file for deploy
-        run: |
-          mkdir -p ~/.ssh
-          echo "${{ secrets.VPS_SSH_KEY }}" > ~/.ssh/deploy_key
-          chmod 600 ~/.ssh/deploy_key
 
-      - name: Deploy to VPS via rsync (manual)
-        run: |
-          rsync -avzr --delete \
-            --exclude='.git' \
-            --exclude='.github' \
-            --exclude='.idea' \
-            --exclude='mise.local.toml' \
-            -e "ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no" \
-            ./ \
-            "${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}:/var/www/dev.jgutierrez.site/learning/php-api-basico"
-      
-      # 5. Post-deployment: log y verificación
-      - name: Post-deployment tasks
-        uses: appleboy/ssh-action@v1.2.0
+      - name: Deploy via SSH
+        uses: appleboy/scp-action@v1
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          source: "index.php,mise.toml,README.md"
+          target: "/var/www/dev.jgutierrez.site/learning/php-api-basico"
+          strip_components: 0
+
+      - name: Run post-deploy commands
+        uses: appleboy/ssh-action@v1
         with:
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.VPS_SSH_KEY }}
           script: |
-            echo "========================================" >> /var/www/dev.jgutierrez.site/deploy/deploy.log
-            echo "✅ Deploy exitoso: $(date '+%Y-%m-%d %H:%M:%S')" >> /var/www/dev.jgutierrez.site/deploy/deploy.log
-            echo "📦 Proyecto: php-api-basico" >> /var/www/dev.jgutierrez.site/deploy/deploy.log
-            echo "👤 Usuario: webdev" >> /var/www/dev.jgutierrez.site/deploy/deploy.log
-            echo "📁 Path: /var/www/dev.jgutierrez.site/learning/php-api-basico" >> /var/www/dev.jgutierrez.site/deploy/deploy.log
-            echo "========================================" >> /var/www/dev.jgutierrez.site/deploy/deploy.log
-            
-            # Verificar que el archivo existe
-            if [ -f /var/www/dev.jgutierrez.site/learning/php-api-basico/index.php ]; then
-              echo "✅ index.php verificado en servidor"
-            else
-              echo "❌ ERROR: index.php no encontrado" && exit 1
-            fi
+            echo "Deploy completed at $(date)" >> /var/www/dev.jgutierrez.site/deploy/deploy.log
+            ls -la /var/www/dev.jgutierrez.site/learning/php-api-basico/
